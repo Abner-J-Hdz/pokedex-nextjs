@@ -15,13 +15,18 @@ const toggleFavorite = (id: number ) => {
 
 const existInFavorites = (id: number): boolean => {
 
-    if(typeof window === 'undefined') return false;///verificamos si es codigo de servirdor ya que local storage no existe en el backend
+    if(typeof window === 'undefined') return false;///verificamos si es codigo de servidor ya que local storage no existe en el backend
 
     const favorites: number[] = JSON.parse(localStorage.getItem('favorites') || '[]');
     return favorites.includes(id);
 }
 
+const pokemons = (): number[] => {
+    return JSON.parse(localStorage.getItem('favorites') || '[]')
+}
+
 export default{
     toggleFavorite,
-    existInFavorites
+    existInFavorites,
+    pokemons
 }
