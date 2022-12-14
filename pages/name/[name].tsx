@@ -1,41 +1,29 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { useState} from 'react'
 import { GetStaticPaths, GetStaticProps, NextPage } from 'next'
-
-import { Layout } from '../../components/layouts'
-import { pokeApi } from '../../api'
-import { Pokemon, PokemonListResponse } from '../../interfaces'
 import { Button, Card, Container, Grid, Text, Image } from '@nextui-org/react'
+import { Layout } from "../../components/layouts"
+import { Pokemon, PokemonByNameAndId, pokemonByNameAndIdList, PokemonListResponse } from '../../interfaces'
+import { pokeApi } from '../../api'
+
 import {localFavorites} from '../../utils'
-import confetti from 'canvas-confetti'
 
 interface Props{
-  pokemon: Pokemon
-}
-
-const PokemonPage: NextPage <Props> = ({ pokemon }) => {
-
-  const [isInFavorite, setIsInFavorite] = useState(localFavorites.existInFavorites(pokemon.id))
-
-  let TextButton = isInFavorite ? "En favoritos":"Guardar en favoritos"
-
-  const onToggleFavorite = () => {
-    /*let idPokemon: number = +pokemon.id*/
-    localFavorites.toggleFavorite( pokemon.id );
-    setIsInFavorite(!isInFavorite)
-    if( isInFavorite ) return;
-
-    confetti({
-      zIndex: 999,
-      particleCount: 100,
-      spread: 160,
-      angle: -100,
-      origin: {
-        x: 1,
-        y: 0
-      }
-    })
-
+    pokemon: Pokemon
   }
+
+const PokemonByNamePage : NextPage <Props> =  ({ pokemon }) => {
+
+    const [isInFavorite, setIsInFavorite] = useState(localFavorites.existInFavorites(pokemon.id))
+
+    let TextButton = isInFavorite ? "En favoritos":"Guardar en favoritos"
+  
+    const onToggleFavorite = () => {
+      /*let idPokemon: number = +pokemon.id*/
+      localFavorites.toggleFavorite( pokemon.id );
+      setIsInFavorite(!isInFavorite)
+      if( isInFavorite ) return;
+  
+    }
 
   return (
     <Layout title={pokemon.name} >
@@ -106,53 +94,35 @@ const PokemonPage: NextPage <Props> = ({ pokemon }) => {
   )
 }
 
-// You should use getStaticPaths if you’re statically pre-rendering pages that use dynamic routes
+export default PokemonByNamePage
+
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
-///ESTO POR QUE SABEMOS QUE SOLO VAMOS A USAR 151 Y NO MAS
-  const pokemons151 = [...Array(160)].map((value, index) =>`${index + 1}` )
-  
-  return {
-    paths: pokemons151.map(id => (
-      {
-      params: {id}
+    const { data } = await pokeApi.get<PokemonListResponse>(`pokemon?limit=50`);
+
+    const pokemonName:string[] =  data.results.map( pokemon => pokemon.name);
+
+      return {
+        paths: pokemonName.map(name => (
+          {
+          params: {name}
+          }
+        )),
+    
+        fallback: false
       }
-    )),
-
-    // paths: [
-    //   {
-    //     params: { id: '1'}
-    //   }
-    // ],
-    fallback: false
-  }
-  /* fallback : 'blocking' deja entrar a la pagina aunque la pagina no 
-  haya sido previamente renderizada o mejor dicho si no estoy pasando un params dentro de los params que estoy enviando
-  pues dejalo pasar
-  params: {
-        id: '1'
-      }
-  si solo paso eso(en los params),  pero en fallback : 'blocking'  si paso en la url 120 por ejemplo me va a dejar pasar a la pagina
-
-  fallback : false, lo que hace es que  me va a retornar un 404 si paso un id que no está dentro de los params que estoy pasando
-
-  */
 }
 
 export const getStaticProps: GetStaticProps = async (ctx) => {
 
-  const {params} = ctx;
-
-  const { id } = params as { id: string}
-
-  const { data } = await pokeApi.get<Pokemon>(`pokemon/${id}`)
-
-  return {
-    props: {
-      pokemon: data
+    const {params} = ctx;
+  
+    const { name } = params as { name: string}
+  
+    const { data } = await pokeApi.get<Pokemon>(`pokemon/${name.toLocaleLowerCase()}`)
+  
+    return {
+      props: {
+        pokemon: data
+      }
     }
   }
-}
-
-// You should use getStaticPaths if you’re statically pre-rendering pages that use dynamic routes
-
-export default PokemonPage
