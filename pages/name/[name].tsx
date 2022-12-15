@@ -1,29 +1,45 @@
-import React, { useState} from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { GetStaticPaths, GetStaticProps, NextPage } from 'next'
-import { Button, Card, Container, Grid, Text, Image } from '@nextui-org/react'
-import { Layout } from "../../components/layouts"
-import { Pokemon, PokemonByNameAndId, pokemonByNameAndIdList, PokemonListResponse } from '../../interfaces'
-import { pokeApi } from '../../api'
 
-import {localFavorites} from '../../utils'
+import { Layout } from '../../components/layouts'
+import { pokeApi } from '../../api'
+import { Pokemon, PokemonListResponse } from '../../interfaces'
+import { Button, Card, Container, Grid, Text, Image } from '@nextui-org/react'
+import {getPokemonInfo, localFavorites} from '../../utils'
+import confetti from 'canvas-confetti'
 
 interface Props{
-    pokemon: Pokemon
+  pokemon: Pokemon
+}
+
+const PokemonByNamePage: NextPage <Props> = ({ pokemon }) => {
+
+  const [isInFavorite, setIsInFavorite] = useState(false)
+
+  useEffect(() => {
+    setIsInFavorite(localFavorites.existInFavorites(pokemon.id))
+  }, [])
+
+  let TextButton = isInFavorite ? "En favoritos":"Guardar en favoritos"
+
+  const onToggleFavorite = () => {
+    /*let idPokemon: number = +pokemon.id*/
+    localFavorites.toggleFavorite( pokemon.id );
+    setIsInFavorite(!isInFavorite)
+    if( isInFavorite ) return;
+
+    confetti({
+      zIndex: 999,
+      particleCount: 100,
+      spread: 160,
+      angle: -100,
+      origin: {
+        x: 1,
+        y: 0
+      }
+    })
+
   }
-
-const PokemonByNamePage : NextPage <Props> =  ({ pokemon }) => {
-
-    const [isInFavorite, setIsInFavorite] = useState(localFavorites.existInFavorites(pokemon.id))
-
-    let TextButton = isInFavorite ? "En favoritos":"Guardar en favoritos"
-  
-    const onToggleFavorite = () => {
-      /*let idPokemon: number = +pokemon.id*/
-      localFavorites.toggleFavorite( pokemon.id );
-      setIsInFavorite(!isInFavorite)
-      if( isInFavorite ) return;
-  
-    }
 
   return (
     <Layout title={pokemon.name} >
@@ -117,12 +133,10 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
     const {params} = ctx;
   
     const { name } = params as { name: string}
-  
-    const { data } = await pokeApi.get<Pokemon>(`pokemon/${name.toLocaleLowerCase()}`)
-  
+
     return {
       props: {
-        pokemon: data
+        pokemon: await getPokemonInfo(name)
       }
     }
   }
