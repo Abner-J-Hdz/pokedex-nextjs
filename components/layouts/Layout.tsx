@@ -12,8 +12,6 @@ const origin = (typeof window === 'undefined') ? '' : window.location.origin;
 // @ts-ignore
 export const Layout: React.FunctionComponent<Props> = ({ title, children } ) => {
 
-  console.log(origin)
-
   let titulo = title || 'Pokemón App';
   return (
     <>
