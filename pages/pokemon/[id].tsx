@@ -14,7 +14,11 @@ interface Props{
 
 const PokemonPage: NextPage <Props> = ({ pokemon }) => {
 
-  const [isInFavorite, setIsInFavorite] = useState(localFavorites.existInFavorites(pokemon.id))
+  const [isInFavorite, setIsInFavorite] = useState(false)
+
+  useEffect(() => {
+    setIsInFavorite(localFavorites.existInFavorites(pokemon.id))
+  }, [])
 
   let TextButton = isInFavorite ? "En favoritos":"Guardar en favoritos"
 
@@ -109,7 +113,7 @@ const PokemonPage: NextPage <Props> = ({ pokemon }) => {
 // You should use getStaticPaths if you’re statically pre-rendering pages that use dynamic routes
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
 ///ESTO POR QUE SABEMOS QUE SOLO VAMOS A USAR 151 Y NO MAS
-  const pokemons151 = [...Array(160)].map((value, index) =>`${index + 1}` )
+  const pokemons151 = [...Array(100)].map((value, index) =>`${index + 1}` )
   
   return {
     paths: pokemons151.map(id => (
@@ -123,7 +127,7 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
     //     params: { id: '1'}
     //   }
     // ],
-    fallback: false
+    fallback: 'blocking'
   }
   /* fallback : 'blocking' deja entrar a la pagina aunque la pagina no 
   haya sido previamente renderizada o mejor dicho si no estoy pasando un params dentro de los params que estoy enviando
@@ -134,7 +138,6 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
   si solo paso eso(en los params),  pero en fallback : 'blocking'  si paso en la url 120 por ejemplo me va a dejar pasar a la pagina
 
   fallback : false, lo que hace es que  me va a retornar un 404 si paso un id que no está dentro de los params que estoy pasando
-
   */
 }
 
@@ -142,11 +145,24 @@ export const getStaticProps: GetStaticProps = async ({ params}) => {
 
   const { id } = params as { id: string}
 
-  return {
-    props: {
-      pokemon : await getPokemonInfo(id)
+  const pokemon = await getPokemonInfo(id)
+
+  if(!pokemon){
+    return {
+      redirect :{
+        destination:'/',
+        permanent: false
+      }
     }
   }
+
+  return {
+    props: {
+      pokemon 
+    },
+    revalidate: 86400
+  }
+  //revalidate: 86400validamos cada cuantos vamos a validar las paginas
 }
 
 // You should use getStaticPaths if you’re statically pre-rendering pages that use dynamic routes

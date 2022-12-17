@@ -29,7 +29,7 @@ const HomePage: NextPage<Props> = ({pokemons}) => {
 //siempre y cuando se sepa que valores se van a cagar predeterminadamente
 export const getStaticProps: GetStaticProps = async (ctx) => {
   ////tipado de nuestra respuesta
-  const {data} = await pokeApi.get<PokemonListResponse>('pokemon?limit=160')
+  const {data} = await pokeApi.get<PokemonListResponse>('pokemon?limit=100')
   ///url image = https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png
   const pokemons : SmallPokemon[] = data.results.map((poke, index) => ({
     ...poke,

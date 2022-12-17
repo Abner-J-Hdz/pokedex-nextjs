@@ -7,6 +7,7 @@ import { Pokemon, PokemonListResponse } from '../../interfaces'
 import { Button, Card, Container, Grid, Text, Image } from '@nextui-org/react'
 import {getPokemonInfo, localFavorites} from '../../utils'
 import confetti from 'canvas-confetti'
+import { redirect } from 'next/dist/server/api-utils'
 
 interface Props{
   pokemon: Pokemon
@@ -113,7 +114,7 @@ const PokemonByNamePage: NextPage <Props> = ({ pokemon }) => {
 export default PokemonByNamePage
 
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
-    const { data } = await pokeApi.get<PokemonListResponse>(`pokemon?limit=50`);
+    const { data } = await pokeApi.get<PokemonListResponse>(`pokemon?limit=100`);
 
     const pokemonName:string[] =  data.results.map( pokemon => pokemon.name);
 
@@ -124,7 +125,7 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
           }
         )),
     
-        fallback: false
+        fallback: 'blocking'
       }
 }
 
@@ -134,9 +135,20 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
   
     const { name } = params as { name: string}
 
+    const pokemon = await getPokemonInfo(name)
+
+    if(!pokemon){
+      return {
+        redirect: {
+          destination: '/',
+          permanent: false
+        }
+      }
+    }
+
     return {
       props: {
-        pokemon: await getPokemonInfo(name)
+        pokemon
       }
     }
   }
